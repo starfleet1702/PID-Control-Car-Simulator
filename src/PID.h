@@ -9,6 +9,7 @@ public:
   double p_error;
   double i_error;
   double d_error;
+  double prev_cte;
 
   /*
   * Coefficients
@@ -16,7 +17,9 @@ public:
   double Kp;
   double Ki;
   double Kd;
-
+  
+  bool is_first_measurement;
+  
   /*
   * Constructor
   */
@@ -35,7 +38,7 @@ public:
   /*
   * Update the PID error variables given cross track error.
   */
-  void UpdateError(double cte);
+  double Update(double cte,bool reverse);
 
   /*
   * Calculate the total PID error.

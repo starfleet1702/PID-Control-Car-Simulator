@@ -32,13 +32,19 @@ int main()
 {
   uWS::Hub h;
 
-  PID pid;
-  // TODO: Initialize the pid variable.
+	  
+	PID pid_steer;
+	PID pid_speed;
+	// DONE : Initialize the pid variable.
+	pid_steer.Init(0.08,0.0001,0.15);
+    pid_speed.Init(0.1,0.2,0.002);
 
-  h.onMessage([&pid](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length, uWS::OpCode opCode) {
+  h.onMessage([&pid_steer,&pid_speed](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length, uWS::OpCode opCode) {
     // "42" at the start of the message means there's a websocket message event.
     // The 4 signifies a websocket message
     // The 2 signifies a websocket event
+	
+	// std::cout << "In onMessage " <<std::endl;
     if (length && length > 2 && data[0] == '4' && data[1] == '2')
     {
       auto s = hasData(std::string(data).substr(0, length));
@@ -50,7 +56,17 @@ int main()
           double cte = std::stod(j[1]["cte"].get<std::string>());
           double speed = std::stod(j[1]["speed"].get<std::string>());
           double angle = std::stod(j[1]["steering_angle"].get<std::string>());
-          double steer_value;
+          double steer_value,throttle_value;
+		  double desired_speed = 9;
+		  double speed_cte = speed - desired_speed;
+		  
+		  
+		  // std::cout << "Before PID Update " <<std::endl;
+		  
+		  steer_value = pid_steer.Update(cte,true);
+		  throttle_value = pid_speed.Update(speed_cte,true);
+		  
+		  // std::cout << "After PID Update " <<std::endl;
           /*
           * TODO: Calcuate steering value here, remember the steering value is
           * [-1, 1].
@@ -63,7 +79,7 @@ int main()
 
           json msgJson;
           msgJson["steering_angle"] = steer_value;
-          msgJson["throttle"] = 0.3;
+          msgJson["throttle"] = 0.05;
           auto msg = "42[\"steer\"," + msgJson.dump() + "]";
           std::cout << msg << std::endl;
           ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);
